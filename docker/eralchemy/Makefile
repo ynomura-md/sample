@@ -10,7 +10,9 @@ PORT=5432
 DEFAULT_NET  = bridge
 DOCKER_NETWORK ?= $(DEFAULT_NET)
 
-LINK = --link pa-1_postgresql:db
+LINK = --link pa-1_postgresql:pa1-db
+
+VOLUME = -v $(PWD)/tmp:/usr/src/app/eralchemy
 
 build: ## Build docker image
 	docker build -t $(PREFIX):$(TAG) .
@@ -19,15 +21,27 @@ build: ## Build docker image
 
 debug:
 	docker run --rm -it \
-		-e "PRESTO_HOST=presto.ssp.devel.scaleout.jp" \
-		-e "PRESTO_PORT=80" \
-		-e "DB_HOST=azs-dev-db" \
-		-e "DB_PORT=9999" \
-		-e "DB_NAME=azs" \
-		-e "DB_USER=azs" \
+		-e "DB_HOST=pa1-db" \
+		-e "DB_PORT=5432" \
+		-e "DB_NAME=pa1" \
+		-e "DB_USER=pa1" \
 		-e "DB_PASSWORD=test" \
-		--net=$(DOCKER_NETWORK) $(LINK) $(PREFIX):$(TAG) \
+		--net=$(DOCKER_NETWORK) $(LINK) $(VOLUME) $(PREFIX):$(TAG) \
 		sh
+
+run: build
+	docker run --rm -it \
+		-e "DB_HOST=pa1-db" \
+		-e "DB_PORT=5432" \
+		-e "DB_NAME=pa1" \
+		-e "DB_USER=pa1" \
+		-e "DB_PASSWORD=test" \
+		--net=$(DOCKER_NETWORK) $(LINK) $(VOLUME) $(PREFIX):$(TAG) \
+		python main.py
+
+clean:
+	@rm -rf $(PWD)/tmp/*
+
 help: ## Help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
