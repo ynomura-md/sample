@@ -14,7 +14,7 @@ build: ## Build docker image
 	docker build -t $(PREFIX):$(TAG) .
 
 daemon:
-	docker run -d -p $(PORT):5432 --name $(CONTAINER_NAME) $(PREFIX):$(TAG)
+	docker run --rm -d -p $(PORT):5432 --name $(CONTAINER_NAME) $(PREFIX):$(TAG)
 
 help: ## Help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
